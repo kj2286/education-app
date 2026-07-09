@@ -1,6 +1,24 @@
 # HANDOFF — education-app
 
-## 마지막 작업 (2026-07-09) — US-010: Styling & Responsive Design
+## 마지막 작업 (2026-07-09) — US-011: Deployment to Vercel (최종 단계, 완료)
+- **Git**: `.omc/`(내부 상태 파일)는 `.gitignore`에 추가 후 제외, 나머지 전부 커밋
+  (`f477dfd "Complete: education app prototype with all features"`, 26 files).
+- **GitHub**: `gh repo create kj2286/education-app --public`로 신규 생성 후 push.
+  → https://github.com/kj2286/education-app (main, public)
+- **Vercel**: CLI 이미 인증됨(`gangs-5471`). `vercel --prod --yes --scope gangs-5471s-projects`로 배포,
+  GitHub repo 자동 연동됨(향후 push마다 자동 배포).
+  - Production(고정 별칭): **https://education-app-six-eta.vercel.app**
+  - Deployment URL: https://education-6bc5gwheg-gangs-5471s-projects.vercel.app
+- **검증** (증거 있음):
+  - `npm run build` 로컬 실행 exit 0 (배포 전 재확인), Vercel 원격 빌드도 동일하게 성공(38s).
+  - 라이브 URL 전 라우트 curl 확인: `/`→307→`/login`, `/login`·`/user-type`·`/dashboard`·`/problems`·
+    `/problems/1`·`/teachers`·`/profile` 전부 200, 존재하지 않는 경로는 404 정상.
+  - `/login` HTML 바디 직접 확인 — 실제 마크업 렌더(로그인 폼, 소셜 로그인 버튼, 타이틀 "수학비서 …"),
+    서버 에러 마커 없음, `x-vercel-cache: HIT`.
+  - `git status` clean, `origin/main` 과 로컬 커밋 일치 확인.
+- 남은 작업 없음 — 전체 US-001~US-011 완료.
+
+## 이전 작업 (2026-07-09) — US-010: Styling & Responsive Design
 - **디자인 토큰 정립** (`src/app/globals.css`): Figma 팔레트를 CSS 변수 + Tailwind v4 `@theme`로 노출
   (`primary #2563EB`, `primary-dark #1d4ed8`, `test #DC2626`, `study #3B82F6`, `surface #f5f5f5`, `ink #333`).
   → `bg-surface`, `text-ink`, `bg-primary` 등 유틸 사용 가능. 컴파일 확인함.
