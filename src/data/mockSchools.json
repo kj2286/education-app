@@ -1,0 +1,362 @@
+[
+  {
+    "id": 1,
+    "name": "강남고등학교",
+    "address": "서울시 강남구",
+    "city": "Seoul"
+  },
+  {
+    "id": 2,
+    "name": "휘문고등학교",
+    "address": "서울시 강남구",
+    "city": "Seoul"
+  },
+  {
+    "id": 3,
+    "name": "숙명여자고등학교",
+    "address": "서울시 강남구",
+    "city": "Seoul"
+  },
+  {
+    "id": 4,
+    "name": "경기고등학교",
+    "address": "서울시 강남구",
+    "city": "Seoul"
+  },
+  {
+    "id": 5,
+    "name": "단대부속고등학교",
+    "address": "서울시 강남구",
+    "city": "Seoul"
+  },
+  {
+    "id": 6,
+    "name": "서울고등학교",
+    "address": "서울시 서초구",
+    "city": "Seoul"
+  },
+  {
+    "id": 7,
+    "name": "세화고등학교",
+    "address": "서울시 서초구",
+    "city": "Seoul"
+  },
+  {
+    "id": 8,
+    "name": "반포고등학교",
+    "address": "서울시 서초구",
+    "city": "Seoul"
+  },
+  {
+    "id": 9,
+    "name": "양정고등학교",
+    "address": "서울시 양천구",
+    "city": "Seoul"
+  },
+  {
+    "id": 10,
+    "name": "강서고등학교",
+    "address": "서울시 양천구",
+    "city": "Seoul"
+  },
+  {
+    "id": 11,
+    "name": "명덕외국어고등학교",
+    "address": "서울시 강서구",
+    "city": "Seoul"
+  },
+  {
+    "id": 12,
+    "name": "대원외국어고등학교",
+    "address": "서울시 광진구",
+    "city": "Seoul"
+  },
+  {
+    "id": 13,
+    "name": "중동고등학교",
+    "address": "서울시 강남구",
+    "city": "Seoul"
+  },
+  {
+    "id": 14,
+    "name": "보성고등학교",
+    "address": "서울시 송파구",
+    "city": "Seoul"
+  },
+  {
+    "id": 15,
+    "name": "잠실고등학교",
+    "address": "서울시 송파구",
+    "city": "Seoul"
+  },
+  {
+    "id": 16,
+    "name": "배재고등학교",
+    "address": "서울시 강동구",
+    "city": "Seoul"
+  },
+  {
+    "id": 17,
+    "name": "한영고등학교",
+    "address": "서울시 강동구",
+    "city": "Seoul"
+  },
+  {
+    "id": 18,
+    "name": "용산고등학교",
+    "address": "서울시 용산구",
+    "city": "Seoul"
+  },
+  {
+    "id": 19,
+    "name": "경복고등학교",
+    "address": "서울시 종로구",
+    "city": "Seoul"
+  },
+  {
+    "id": 20,
+    "name": "중앙고등학교",
+    "address": "서울시 종로구",
+    "city": "Seoul"
+  },
+  {
+    "id": 21,
+    "name": "분당고등학교",
+    "address": "경기도 성남시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 22,
+    "name": "서현고등학교",
+    "address": "경기도 성남시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 23,
+    "name": "낙생고등학교",
+    "address": "경기도 성남시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 24,
+    "name": "수내고등학교",
+    "address": "경기도 성남시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 25,
+    "name": "백석고등학교",
+    "address": "경기도 고양시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 26,
+    "name": "일산동고등학교",
+    "address": "경기도 고양시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 27,
+    "name": "저현고등학교",
+    "address": "경기도 고양시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 28,
+    "name": "안양고등학교",
+    "address": "경기도 안양시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 29,
+    "name": "평촌고등학교",
+    "address": "경기도 안양시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 30,
+    "name": "부흥고등학교",
+    "address": "경기도 안양시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 31,
+    "name": "수원고등학교",
+    "address": "경기도 수원시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 32,
+    "name": "영통고등학교",
+    "address": "경기도 수원시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 33,
+    "name": "수성고등학교",
+    "address": "경기도 수원시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 34,
+    "name": "용인고등학교",
+    "address": "경기도 용인시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 35,
+    "name": "수지고등학교",
+    "address": "경기도 용인시",
+    "city": "Gyeonggi"
+  },
+  {
+    "id": 36,
+    "name": "대명고등학교",
+    "address": "대구시 남구",
+    "city": "Daegu"
+  },
+  {
+    "id": 37,
+    "name": "경신고등학교",
+    "address": "대구시 수성구",
+    "city": "Daegu"
+  },
+  {
+    "id": 38,
+    "name": "정화여자고등학교",
+    "address": "대구시 수성구",
+    "city": "Daegu"
+  },
+  {
+    "id": 39,
+    "name": "대륜고등학교",
+    "address": "대구시 수성구",
+    "city": "Daegu"
+  },
+  {
+    "id": 40,
+    "name": "부산고등학교",
+    "address": "부산시 연제구",
+    "city": "Busan"
+  },
+  {
+    "id": 41,
+    "name": "부산진고등학교",
+    "address": "부산시 부산진구",
+    "city": "Busan"
+  },
+  {
+    "id": 42,
+    "name": "동래고등학교",
+    "address": "부산시 동래구",
+    "city": "Busan"
+  },
+  {
+    "id": 43,
+    "name": "해운대고등학교",
+    "address": "부산시 해운대구",
+    "city": "Busan"
+  },
+  {
+    "id": 44,
+    "name": "센텀고등학교",
+    "address": "부산시 해운대구",
+    "city": "Busan"
+  },
+  {
+    "id": 45,
+    "name": "인천고등학교",
+    "address": "인천시 중구",
+    "city": "Incheon"
+  },
+  {
+    "id": 46,
+    "name": "제물포고등학교",
+    "address": "인천시 중구",
+    "city": "Incheon"
+  },
+  {
+    "id": 47,
+    "name": "인천과학고등학교",
+    "address": "인천시 중구",
+    "city": "Incheon"
+  },
+  {
+    "id": 48,
+    "name": "송도고등학교",
+    "address": "인천시 연수구",
+    "city": "Incheon"
+  },
+  {
+    "id": 49,
+    "name": "대전고등학교",
+    "address": "대전시 중구",
+    "city": "Daejeon"
+  },
+  {
+    "id": 50,
+    "name": "충남고등학교",
+    "address": "대전시 서구",
+    "city": "Daejeon"
+  },
+  {
+    "id": 51,
+    "name": "대전여자고등학교",
+    "address": "대전시 중구",
+    "city": "Daejeon"
+  },
+  {
+    "id": 52,
+    "name": "광주고등학교",
+    "address": "광주시 북구",
+    "city": "Gwangju"
+  },
+  {
+    "id": 53,
+    "name": "광주제일고등학교",
+    "address": "광주시 북구",
+    "city": "Gwangju"
+  },
+  {
+    "id": 54,
+    "name": "살레시오고등학교",
+    "address": "광주시 북구",
+    "city": "Gwangju"
+  },
+  {
+    "id": 55,
+    "name": "울산고등학교",
+    "address": "울산시 남구",
+    "city": "Ulsan"
+  },
+  {
+    "id": 56,
+    "name": "학성고등학교",
+    "address": "울산시 중구",
+    "city": "Ulsan"
+  },
+  {
+    "id": 57,
+    "name": "청주고등학교",
+    "address": "충청북도 청주시",
+    "city": "Chungbuk"
+  },
+  {
+    "id": 58,
+    "name": "세광고등학교",
+    "address": "충청북도 청주시",
+    "city": "Chungbuk"
+  },
+  {
+    "id": 59,
+    "name": "전주고등학교",
+    "address": "전라북도 전주시",
+    "city": "Jeonbuk"
+  },
+  {
+    "id": 60,
+    "name": "상산고등학교",
+    "address": "전라북도 전주시",
+    "city": "Jeonbuk"
+  }
+]
