@@ -2,35 +2,38 @@
 
 import { useEffect, useState } from "react";
 
+/**
+ * Figma toast: dark pill, fixed bottom-center, supports an optional bold
+ * title line plus a regular message line. Auto-dismisses after `duration`.
+ *
+ * Legacy props (`type`) are still accepted so older call sites keep
+ * compiling; `type` no longer changes the visual style since the Figma
+ * design uses a single dark pill for every toast.
+ */
 export type ToastType = "success" | "error" | "info";
+
+export interface ToastData {
+  id: number;
+  title?: string;
+  message: string;
+}
 
 export interface ToastProps {
   message: string;
+  title?: string;
+  /** @deprecated kept for backward compatibility; no longer affects style */
   type?: ToastType;
   duration?: number;
   onDismiss?: () => void;
 }
 
-const typeStyles: Record<ToastType, string> = {
-  success: "bg-green-600 text-white",
-  error: "bg-[#DC2626] text-white",
-  info: "bg-[#2563EB] text-white",
-};
+const EXIT_MS = 200; // matches the toast-pill-out animation in globals.css
 
-const EXIT_MS = 200; // matches the toast-out animation in globals.css
-
-export function Toast({
-  message,
-  type = "info",
-  duration = 3000,
-  onDismiss,
-}: ToastProps) {
+export function Toast({ message, title, duration = 2500, onDismiss }: ToastProps) {
   const [visible, setVisible] = useState(true);
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
-    // Begin the fade-out shortly before the full duration elapses so the
-    // 200ms exit animation finishes right around `duration`.
     const startExitAt = Math.max(duration - EXIT_MS, 0);
 
     const exitTimer = setTimeout(() => {
@@ -56,11 +59,41 @@ export function Toast({
     <div
       role="alert"
       aria-live="assertive"
-      className={`fixed left-1/2 top-6 z-50 -translate-x-1/2 rounded-lg px-4 py-3 text-sm font-medium shadow-lg ${
-        leaving ? "toast-exit" : "toast-enter"
-      } ${typeStyles[type]}`}
+      className={`fixed left-1/2 z-50 -translate-x-1/2 rounded-full px-8 py-3.5 text-center text-white shadow-lg ${
+        leaving ? "toast-pill-exit" : "toast-pill-enter"
+      }`}
+      style={{ bottom: "120px", backgroundColor: "#3A3A3FE6" }}
     >
-      {message}
+      {title ? <p className="text-sm font-bold leading-snug">{title}</p> : null}
+      <p className="text-sm font-normal leading-snug">{message}</p>
     </div>
+  );
+}
+
+/**
+ * Renders the currently active toast (if any). Used internally by
+ * ToastProvider — page authors should call `useToast().toast(...)` instead
+ * of rendering this directly.
+ */
+export function ToastViewport({
+  toast,
+  duration,
+  onDismiss,
+}: {
+  toast: ToastData | null;
+  duration: number;
+  onDismiss: () => void;
+}) {
+  if (!toast) {
+    return null;
+  }
+  return (
+    <Toast
+      key={toast.id}
+      title={toast.title}
+      message={toast.message}
+      duration={duration}
+      onDismiss={onDismiss}
+    />
   );
 }

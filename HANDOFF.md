@@ -1,6 +1,52 @@
 # HANDOFF — education-app
 
-## 마지막 작업 (2026-07-09) — US-011: Deployment to Vercel (최종 단계, 완료)
+## 마지막 작업 (2026-07-09) — 선생님(teachers) 플로우 Figma 리디자인
+- Figma 스크린샷 5장(05~08, 10) 기준으로 `/teachers`, `/teachers/add` 재구현. Tailwind v4 + TS.
+- **신규**: `src/lib/useMyTeachers.ts` — localStorage 훅(`my_teachers_v2`, SSR-safe).
+  `myTeachers`(연결된 선생님 목록, 파스텔 카드컬러 3색 순환) / `requested`(대기중 id 목록).
+  `requestConnect(teacher, addNotification)` → 즉시 pending 처리 후 5초 뒤 승인 시뮬레이션:
+  `myTeachers`에 추가 + `addNotification({icon:'megaphone', category:'manage',
+  title:'[공지] {닉네임} 선생님이 승인했어요.', timeAgo:'방금 전'})` 호출(파라미터로 주입, context 직접 의존 안 함).
+  기본 선생님 1명('기미테디') 시드로 빈 리스트 방지.
+- **재작성**: `src/app/teachers/page.tsx` (나의 선생님) — `AppShell`로 감쌈, max-w-[660px] 중앙정렬,
+  우상단 "선생님 추가" 버튼 → `/teachers/add`. 카드: h-[170px] rounded-[24px], 파스텔 배경
+  (#E9E0D8/#EDE7F4/#EAF0DF) 순환, 아치형 사진(45px 45px 8px 8px) 또는 4-lobe blob 플레이스홀더,
+  닉네임 12px 중앙정렬, 장식용 "⋮" (클릭 무동작).
+- **신규**: `src/app/teachers/add/page.tsx` (선생님 추가/검색) — "< 뒤로", 닉네임 검색 input(✕ 지우기),
+  검색어 있을 때만 결과 표시(mockTeachers 닉네임 부분일치), 매칭 구간 파란색(#4954F0) 하이라이트.
+  행 상태 3종: 미연결(다크필 "연결 요청" → requestConnect + toast) / 대기중(연보라 필 "연결 요청 취소",
+  현재는 단순 토스트만) / 이미연결("이미 연결함" 회색 텍스트 + ⋮).
+- 기존 `/teachers` 페이지는 완전 교체(이전 `Card`/`Button`/`Navigation` 기반 탭 UI 제거).
+  `Navigation`/`Card`/`Button`은 `/dashboard`, `/problems`에서 독립적으로 계속 사용 중 — 영향 없음 확인.
+- **검증** (증거 있음):
+  - `npx tsc --noEmit` exit 0 (에러 0건).
+  - `npm run build` 성공 — `/teachers`(2.05kB), `/teachers/add`(3.42kB) 모두 정적 생성(12/12 페이지).
+  - `npx eslint src/app/teachers src/lib/useMyTeachers.ts` 에러 0건.
+- **주의**: 이 작업 시작 시점에 이미 US-009/US-010 관련 uncommitted 변경사항이 다수 남아있었음
+  (login/profile/dashboard/globals.css 등 — 이번 세션에서 건드리지 않음, 그대로 unstaged 유지).
+  `src/lib/useMyTeachers.ts`, `src/app/teachers/add/page.tsx`는 신규 untracked 파일.
+  **커밋/배포 안 함** — 사용자 명시 요청 없어 스킵(요청 시 fewer-permission-prompts 패턴대로 진행 예정).
+
+## 멈춘 지점
+- 완료. 선생님 플로우 리디자인 tsc/build/eslint 검증까지 끝난 상태. 커밋/배포는 사용자 지시 대기 중.
+
+## 다음 할 일
+- 사용자가 원하면 이번 세션 변경사항(teachers 리디자인 + 기존 US-009/US-010 unstaged 잔여분) 커밋 및
+  Vercel 배포(`git push` → 자동 배포, memory: "내신인강 코드 변경 후 커밋만 말고 배포까지"는 다른
+  프로젝트 규칙이지만 이 프로젝트도 GitHub 연동 자동배포이므로 push만으로 충분).
+- 커밋 시 이번 세션 무관 변경분(login/profile/dashboard/globals.css 등, US-010 잔여)과
+  teachers 리디자인을 분리 커밋할지 사용자에게 확인 권장.
+- `/teachers/add`의 "연결 요청 취소" 버튼은 현재 토스트만 띄우고 실제 취소 로직(`cancelRequest`)은
+  미연결 — 실제 취소 동작이 필요하면 훅에 이미 구현된 `cancelRequest(id)`를 버튼에 연결.
+
+## 미해결 이슈 / 주의
+- `next.config.ts`에 `images.remotePatterns` 없음 — dicebear 등 외부 이미지 URL 쓰는 페이지가
+  늘어나면 `next/image` 최적화 위해 한 번에 설정 고려 (현재 `/teachers`, `/teachers/add`는
+  plain `<img>`로 우회, 기존 코드베이스 컨벤션과 동일).
+- eslint.config.mjs 관련 과거 이슈는 이전 세션에서 근본 수정됨(`FlatCompat` 방식으로 교체, 위 US-010
+  로그 참고) — 이번 세션 `npx eslint` 정상 동작 확인함.
+
+## 이전 작업 (2026-07-09) — US-011: Deployment to Vercel (최종 단계, 완료)
 - **Git**: `.omc/`(내부 상태 파일)는 `.gitignore`에 추가 후 제외, 나머지 전부 커밋
   (`f477dfd "Complete: education app prototype with all features"`, 26 files).
 - **GitHub**: `gh repo create kj2286/education-app --public`로 신규 생성 후 push.
@@ -176,19 +222,20 @@
 ## 이전 작업 (2026-07-09)
 - US-002: Auth Context & Storage Layer 완료 — `src/lib/storage.ts`, `src/lib/auth.ts`, `src/context/AuthContext.tsx`
 
-## 멈춘 지점
+## 과거 기록 — 멈춘 지점 (US-002 시점, 이후 US-003~US-011 및 teachers 리디자인으로 해소됨)
 - 완료. 사용자 확인/커밋 지시 대기.
 
-## 다음 할 일
+## 과거 기록 — 다음 할 일 (US-002 시점, 대부분 완료됨)
 - 사용자가 원하면 git add + commit (US-002 ~ US-008 전체 파일, 아직 전부 untracked)
 - `/teachers`는 이번 세션에 구현 완료. `/problems`는 다른 세션에서 병행 구현된 것으로 보임(빌드
   결과에 이미 존재) — 필요시 내용 검증
 - `next.config.ts`에 `images.remotePatterns` 없음 — dicebear 등 외부 이미지 URL을 쓰는 페이지가
   늘어나면 `next/image` 최적화를 쓰기 위해 한 번에 설정하는 것을 고려 (현재 `/teachers`는
   plain `<img>`로 우회)
-- `eslint.config.mjs` 버그 근본 수정 여부 확인 (아래 참고, 단순 `.js` 확장자 추가로는 안 됨)
+- `eslint.config.mjs` 버그 근본 수정 여부 확인 (아래 참고, 단순 `.js` 확장자 추가로는 안 됨) —
+  US-010에서 `FlatCompat` 방식으로 근본 수정 완료됨.
 
-## 미해결 이슈 / 주의
+## 과거 기록 — 미해결 이슈 / 주의 (US-002 시점)
 - `eslint.config.mjs` 여전히 깨져 있음: `eslint-config-next/core-web-vitals` / `/typescript`
   import에 `.js` 확장자 누락 → `next build`의 lint 단계에서 "Cannot find module" 에러가
   출력됨. 단, **빌드는 실패하지 않음(exit 0)**, 타입체크·페이지 생성 모두 정상 완료.

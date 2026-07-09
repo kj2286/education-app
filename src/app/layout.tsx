@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
+import { NotificationProvider } from "@/context/NotificationContext";
+import { ToastProvider } from "@/context/ToastContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,8 +37,20 @@ export default function RootLayout({
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link
+          rel="stylesheet"
+          as="style"
+          crossOrigin="anonymous"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-surface text-ink">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </NotificationProvider>
+        </AuthProvider>
       </body>
     </html>
   );

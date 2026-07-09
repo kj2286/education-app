@@ -1,10 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
-import { Header } from "@/components/Header";
-import { Navigation, type NavTab } from "@/components/Navigation";
-import { Card } from "@/components/Card";
+import type { ReactNode } from "react";
+import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/context/AuthContext";
 
 interface TimetableEntry {
@@ -12,287 +9,411 @@ interface TimetableEntry {
   subject: string;
 }
 
-interface MealInfo {
-  rice: string;
-  soup: string;
-  sides: string[];
-}
-
-interface CalendarEvent {
-  date: string;
-  title: string;
-}
-
-interface GradeEntry {
-  subject: string;
-  score: number;
-}
-
 const DUMMY_TIMETABLE: TimetableEntry[] = [
-  { period: 1, subject: "국어" },
-  { period: 2, subject: "영어" },
-  { period: 3, subject: "수학" },
-  { period: 4, subject: "과학" },
-  { period: 5, subject: "사회" },
+  { period: 1, subject: "독서" },
+  { period: 2, subject: "독서" },
+  { period: 3, subject: "미적분" },
+  { period: 4, subject: "세계사" },
+  { period: 5, subject: "세계사" },
+  { period: 6, subject: "독서" },
+  { period: 7, subject: "세계사" },
+  { period: 8, subject: "미술" },
+  { period: 9, subject: "해양 문화와 기술" },
+  { period: 10, subject: "윤리와 사상" },
 ];
 
-const DUMMY_MEAL: MealInfo = {
-  rice: "잡곡밥",
-  soup: "된장찌개",
-  sides: ["제육볶음", "계란말이", "배추김치"],
-};
+const LUNCH_MENU =
+  "팽이미소국,야채계란찜,쭈꾸미비빔밥,감자치즈볼,배추김치,제로샤인머스캣음료";
+const DINNER_MENU =
+  "흑미밥,소고기당면국,가쓰오두부조림,콩나물무침,제육볶음,깍두기,매실모히또";
 
-const DUMMY_CALENDAR: CalendarEvent[] = [
-  { date: "03.02", title: "입학식" },
-  { date: "04.22", title: "1차 지필고사" },
-  { date: "05.15", title: "수학여행" },
-];
+const ACADEMIC_EVENTS = ["전국 연합학력평가 설명회", "대학 수학능력시험 모의평가 설명회"];
 
-const DUMMY_GRADES: GradeEntry[] = [
-  { subject: "국어", score: 90 },
-  { subject: "수학", score: 95 },
-  { subject: "영어", score: 88 },
-  { subject: "과학", score: 92 },
-  { subject: "사회", score: 85 },
-];
+// Line chart series: [난이도] values across 8 문항 (question numbers).
+const MIDTERM_VALUES = [4, 4, 5.5, 4.5, 6, 4.5, 5.5, 7];
+const FINAL_VALUES = [6, 7.5, 8, 6.5, 6, 7, 5.5, 6.5];
+// Whether each question (1~8) is 주관식 (filled dot) or 객관식 (hollow dot).
+const QUESTION_IS_SUBJECTIVE = [true, false, true, false, true, false, true, false];
 
-const LogoutIcon = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-5 w-5"
-    aria-hidden="true"
-  >
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-    <path d="M16 17l5-5-5-5" />
-    <path d="M21 12H9" />
-  </svg>
-);
-
-const ScheduleIcon = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-5 w-5 text-[#2563EB]"
-    aria-hidden="true"
-  >
-    <rect x={3} y={4} width={18} height={18} rx={2} />
-    <path d="M16 2v4M8 2v4M3 10h18" />
-  </svg>
-);
-
-const MealIcon = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-5 w-5 text-[#2563EB]"
-    aria-hidden="true"
-  >
-    <path d="M3 2v7c0 1.1.9 2 2 2h1v11" />
-    <path d="M6 2v6M9 2v6" />
-    <path d="M18 2c-1.5 1.5-2 3-2 5s.5 3.5 2 5v10" />
-  </svg>
-);
-
-const CalendarIcon = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-5 w-5 text-[#2563EB]"
-    aria-hidden="true"
-  >
-    <rect x={3} y={4} width={18} height={18} rx={2} />
-    <path d="M16 2v4M8 2v4M3 10h18" />
-    <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
-  </svg>
-);
-
-const GradeIcon = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-5 w-5 text-[#2563EB]"
-    aria-hidden="true"
-  >
-    <path d="M3 3v18h18" />
-    <path d="M7 15l4-4 3 3 5-6" />
-  </svg>
-);
-
-function SectionCard({
-  icon,
-  title,
-  children,
-}: {
-  icon: ReactNode;
-  title: string;
-  children: ReactNode;
-}) {
+function CalendarIcon() {
   return (
-    <Card onClick={() => {}} className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        {icon}
-        <h2 className="text-base font-bold text-gray-900">{title}</h2>
-      </div>
-      {children}
-    </Card>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4 text-[#4954F0]"
+      aria-hidden="true"
+    >
+      <rect x={3} y={4} width={18} height={18} rx={2} />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  );
+}
+
+function MealIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4 text-[#4C8A2E]"
+      aria-hidden="true"
+    >
+      <path d="M6 3v7a2 2 0 0 0 4 0V3M8 3v18M17 3c-1.5 1.5-2 3-2 5s.5 3.5 2 5v10" />
+    </svg>
+  );
+}
+
+function SparkleIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4 text-[#4954F0]"
+      aria-hidden="true"
+    >
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />
+    </svg>
+  );
+}
+
+function formatKoreanDateWithWeekday(date: Date): string {
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const weekday = weekdays[date.getDay()];
+  return `${month}월 ${day}일 (${weekday})`;
+}
+
+function formatKoreanDateToday(date: Date): string {
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${month}월 ${day}일(오늘)`;
+}
+
+interface GradeLineChartProps {
+  width?: number;
+  height?: number;
+}
+
+function GradeLineChart({ width = 500, height = 160 }: GradeLineChartProps) {
+  const paddingLeft = 32;
+  const paddingRight = 12;
+  const paddingTop = 12;
+  const paddingBottom = 24;
+
+  const plotWidth = width - paddingLeft - paddingRight;
+  const plotHeight = height - paddingTop - paddingBottom;
+
+  const yMin = 2;
+  const yMax = 8;
+  const yTicks = [3, 5, 7];
+
+  const xCount = MIDTERM_VALUES.length; // 8
+
+  const xForIndex = (i: number) => paddingLeft + (plotWidth * i) / (xCount - 1);
+  const yForValue = (v: number) =>
+    paddingTop + plotHeight - ((v - yMin) / (yMax - yMin)) * plotHeight;
+
+  const buildPoints = (values: number[]) =>
+    values.map((v, i) => ({ x: xForIndex(i), y: yForValue(v) }));
+
+  const midtermPoints = buildPoints(MIDTERM_VALUES);
+  const finalPoints = buildPoints(FINAL_VALUES);
+
+  const toPolyline = (points: { x: number; y: number }[]) =>
+    points.map((p) => `${p.x},${p.y}`).join(" ");
+
+  const midX = xForIndex(4); // dashed gridline near x=5 (index 4 -> label "5")
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      width="100%"
+      height={height}
+      role="img"
+      aria-label="내신 난이도 추이 차트"
+    >
+      <defs>
+        <linearGradient id="midtermFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#6D76F5" stopOpacity={0.15} />
+          <stop offset="100%" stopColor="#6D76F5" stopOpacity={0} />
+        </linearGradient>
+        <linearGradient id="finalFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#F5A25D" stopOpacity={0.15} />
+          <stop offset="100%" stopColor="#F5A25D" stopOpacity={0} />
+        </linearGradient>
+      </defs>
+
+      {/* y-axis label */}
+      <text x={0} y={paddingTop - 2} fontSize={9} fill="#9CA3AF">
+        난이도
+      </text>
+
+      {/* y ticks + gridlines */}
+      {yTicks.map((tick) => {
+        const y = yForValue(tick);
+        return (
+          <g key={tick}>
+            <text x={paddingLeft - 10} y={y + 3} fontSize={9} fill="#9CA3AF" textAnchor="end">
+              {tick}
+            </text>
+            <line
+              x1={paddingLeft}
+              y1={y}
+              x2={width - paddingRight}
+              y2={y}
+              stroke="#F0F1F5"
+              strokeWidth={1}
+            />
+          </g>
+        );
+      })}
+
+      {/* dashed vertical gridline at x=5 */}
+      <line
+        x1={midX}
+        y1={paddingTop}
+        x2={midX}
+        y2={height - paddingBottom}
+        stroke="#D9DBE5"
+        strokeWidth={1}
+        strokeDasharray="3 3"
+      />
+
+      {/* x ticks */}
+      {Array.from({ length: xCount }, (_, i) => i + 1).map((n, i) => (
+        <text
+          key={n}
+          x={xForIndex(i)}
+          y={height - paddingBottom + 14}
+          fontSize={9}
+          fill="#9CA3AF"
+          textAnchor="middle"
+        >
+          {n}
+        </text>
+      ))}
+      <text
+        x={width - paddingRight}
+        y={height - 2}
+        fontSize={9}
+        fill="#9CA3AF"
+        textAnchor="end"
+      >
+        문항
+      </text>
+
+      {/* gradient fills under lines */}
+      <polygon
+        points={`${paddingLeft},${height - paddingBottom} ${toPolyline(
+          midtermPoints
+        )} ${width - paddingRight},${height - paddingBottom}`}
+        fill="url(#midtermFill)"
+      />
+      <polygon
+        points={`${paddingLeft},${height - paddingBottom} ${toPolyline(
+          finalPoints
+        )} ${width - paddingRight},${height - paddingBottom}`}
+        fill="url(#finalFill)"
+      />
+
+      {/* lines */}
+      <polyline
+        points={toPolyline(midtermPoints)}
+        fill="none"
+        stroke="#6D76F5"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <polyline
+        points={toPolyline(finalPoints)}
+        fill="none"
+        stroke="#F5A25D"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* dots */}
+      {midtermPoints.map((p, i) => (
+        <circle
+          key={`mid-${i}`}
+          cx={p.x}
+          cy={p.y}
+          r={3.5}
+          fill={QUESTION_IS_SUBJECTIVE[i] ? "#6D76F5" : "#FFFFFF"}
+          stroke="#6D76F5"
+          strokeWidth={1.5}
+        />
+      ))}
+      {finalPoints.map((p, i) => (
+        <circle
+          key={`fin-${i}`}
+          cx={p.x}
+          cy={p.y}
+          r={3.5}
+          fill={QUESTION_IS_SUBJECTIVE[i] ? "#F5A25D" : "#FFFFFF"}
+          stroke="#F5A25D"
+          strokeWidth={1.5}
+        />
+      ))}
+    </svg>
+  );
+}
+
+function SectionHeader({ icon, title }: { icon: ReactNode; title: string }) {
+  return (
+    <div className="mb-2 flex items-center gap-1.5">
+      {icon}
+      <h2 className="text-sm font-semibold text-[#26282B]">{title}</h2>
+    </div>
   );
 }
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const profile = user.profile;
 
-  const handleTabChange = useCallback(
-    (tab: NavTab) => {
-      if (tab === "teachers") {
-        router.push("/teachers");
-      } else if (tab === "problems") {
-        router.push("/problems");
-      }
-      // "school" tab is the current page; no navigation needed.
-    },
-    [router]
-  );
+  const today = new Date();
+  const timetableDateLabel = formatKoreanDateWithWeekday(today);
+  const academicDateLabel = formatKoreanDateToday(today);
 
-  const handleLogout = useCallback(() => {
-    logout();
-    router.push("/login");
-  }, [logout, router]);
-
-  const totalScore = useMemo(
-    () => DUMMY_GRADES.reduce((sum, entry) => sum + entry.score, 0),
-    []
-  );
-  const averageScore = useMemo(
-    () => Math.round((totalScore / DUMMY_GRADES.length) * 10) / 10,
-    [totalScore]
-  );
+  const leftPeriods = DUMMY_TIMETABLE.slice(0, 5);
+  const rightPeriods = DUMMY_TIMETABLE.slice(5, 10);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-gray-50">
-      <div className="relative">
-        <Header
-          schoolName={profile?.schoolName ?? "학교 정보 없음"}
-          grade={profile?.grade ?? "-"}
-          className={profile?.class ?? "-"}
-          studentName={profile?.name ?? "이름 없음"}
-        />
-        <button
-          type="button"
-          onClick={handleLogout}
-          aria-label="로그아웃"
-          className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
-        >
-          {LogoutIcon}
-          <span className="hidden sm:inline">로그아웃</span>
-        </button>
-      </div>
+    <AppShell>
+      <div className="mx-auto max-w-[660px] py-12">
+        <h1 className="mb-10 text-[26px] font-bold text-[#111111]">나의 학교</h1>
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-6 pb-24">
-        <SectionCard icon={ScheduleIcon} title="시간표">
-          <ul className="grid grid-cols-5 gap-2 text-center">
-            {DUMMY_TIMETABLE.map((entry) => (
-              <li
-                key={entry.period}
-                className="flex flex-col items-center gap-1 rounded-lg bg-gray-50 py-2"
-              >
-                <span className="text-[10px] font-medium text-gray-400">
-                  {entry.period}교시
-                </span>
-                <span className="text-sm font-semibold text-gray-800">
-                  {entry.subject}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
+        {/* School row */}
+        <div className="mb-10 flex items-center gap-2">
+          <span className="inline-flex items-center rounded-md bg-[#26282B] px-2 py-1 text-xs font-bold text-white">
+            고{profile?.grade ?? ""}-{profile?.classNo ?? ""}
+          </span>
+          <span className="text-xl font-bold text-[#111111]">
+            {profile?.schoolName ?? ""}
+          </span>
+        </div>
 
-        <SectionCard icon={MealIcon} title="급식표">
-          <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-[#2563EB]">
-              {DUMMY_MEAL.rice}
+        {/* 시간표 */}
+        <section className="mb-8">
+          <SectionHeader icon={<CalendarIcon />} title="시간표" />
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <span className="inline-flex items-center rounded-md bg-[#EEEFFB] px-2 py-1 text-xs text-[#4954F0]">
+              {timetableDateLabel}
             </span>
-            <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-[#2563EB]">
-              {DUMMY_MEAL.soup}
-            </span>
-            {DUMMY_MEAL.sides.map((side) => (
-              <span
-                key={side}
-                className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700"
-              >
-                {side}
-              </span>
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard icon={CalendarIcon} title="학사일정">
-          <ul className="flex flex-col divide-y divide-gray-100">
-            {DUMMY_CALENDAR.map((event) => (
-              <li
-                key={event.title}
-                className="flex items-center justify-between py-2 text-sm"
-              >
-                <span className="font-medium text-gray-800">{event.title}</span>
-                <span className="text-gray-400">{event.date}</span>
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
-
-        <SectionCard icon={GradeIcon} title="내신정보">
-          <div className="flex flex-col gap-2">
-            {DUMMY_GRADES.map((entry) => (
-              <div key={entry.subject} className="flex items-center gap-3">
-                <span className="w-10 shrink-0 text-sm font-medium text-gray-600">
-                  {entry.subject}
-                </span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
-                  <div
-                    className="h-full rounded-full bg-[#2563EB]"
-                    style={{ width: `${entry.score}%` }}
-                  />
-                </div>
-                <span className="w-8 shrink-0 text-right text-sm font-semibold text-gray-800">
-                  {entry.score}
-                </span>
+            <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-3">
+              <div className="flex flex-col gap-3">
+                {leftPeriods.map((entry) => (
+                  <div key={entry.period} className="flex items-center gap-3">
+                    <span className="w-10 shrink-0 text-xs text-gray-400">
+                      {entry.period}교시
+                    </span>
+                    <span className="text-sm font-bold text-[#111111]">{entry.subject}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-            <p className="mt-1 text-right text-xs text-gray-400">
-              평균 {averageScore}점
-            </p>
+              <div className="flex flex-col gap-3">
+                {rightPeriods.map((entry) => (
+                  <div key={entry.period} className="flex items-center gap-3">
+                    <span className="w-10 shrink-0 text-xs text-gray-400">
+                      {entry.period}교시
+                    </span>
+                    <span className="text-sm font-bold text-[#111111]">{entry.subject}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </SectionCard>
-      </main>
+        </section>
 
-      <Navigation activeTab="school" onTabChange={handleTabChange} />
-    </div>
+        {/* 급식표 */}
+        <section className="mb-8">
+          <SectionHeader icon={<MealIcon />} title="급식표" />
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center rounded-md bg-[#FFF3D6] px-2 py-1 text-xs text-[#B8860B]">
+                점심
+              </span>
+              <span className="text-xs text-gray-400">795kcal</span>
+            </div>
+            <p className="mt-2 text-[13px] leading-relaxed text-[#333333]">{LUNCH_MENU}</p>
+
+            <div className="my-4 border-t border-gray-100" />
+
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center rounded-md bg-[#E5F4DC] px-2 py-1 text-xs text-[#4C8A2E]">
+                저녁
+              </span>
+              <span className="text-xs text-gray-400">699kcal</span>
+            </div>
+            <p className="mt-2 text-[13px] leading-relaxed text-[#333333]">{DINNER_MENU}</p>
+          </div>
+        </section>
+
+        {/* 학사 일정 */}
+        <section className="mb-8">
+          <SectionHeader icon={<SparkleIcon />} title="학사 일정" />
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <p className="text-sm font-bold text-[#111111]">{academicDateLabel}</p>
+            <ul className="mt-2 space-y-1">
+              {ACADEMIC_EVENTS.map((event) => (
+                <li key={event} className="flex gap-1.5 text-[13px] text-gray-700">
+                  <span>•</span>
+                  <span>{event}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* 내신 정보 확인하기 */}
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-[#26282B]">내신 정보 확인하기</h2>
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <p className="text-[13px] font-semibold text-[#111111]">
+              2025년 2학년 1학기 공통수학1
+            </p>
+            <div className="mt-3">
+              <GradeLineChart />
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-4 text-[10px] text-gray-500">
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-[#6D76F5]" />
+                중간
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-[#F5A25D]" />
+                기말
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full border border-gray-400 bg-white" />
+                객관식
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-gray-500" />
+                주관식
+              </span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </AppShell>
   );
 }

@@ -1,189 +1,160 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Navigation, type NavTab } from "@/components/Navigation";
-import { Card } from "@/components/Card";
+import { AppShell } from "@/components/AppShell";
 import mockProblems from "@/data/mockProblems.json";
 
 interface ProblemItem {
   number: number;
-  problem: string;
-  options: string[];
+  format: "객관식" | "주관식";
+  question: string;
+  choices: string[] | null;
   answer: string;
+  minutes: number;
+  difficulty: string;
+  type: string;
 }
 
 interface ProblemSet {
-  id: number;
-  type: string;
-  subject: string;
+  id: string;
+  kind: "worksheet" | "exam";
   title: string;
-  date: string;
+  teacher: string;
+  period?: string;
+  examMinutes?: number;
+  tags: string[];
+  problemCount: number;
+  difficultyDist: Record<string, number>;
   problems: ProblemItem[];
 }
 
 const problemSets = mockProblems as ProblemSet[];
 
-interface SectionConfig {
-  key: string;
-  heading: string;
-  types: string[];
-  color: string;
-  chipBg: string;
-  chipText: string;
+/** 3-step staircase tile icon for worksheet (학습지) cards. */
+function StairsIcon() {
+  return (
+    <svg viewBox="0 0 88 88" className="h-full w-full" aria-hidden="true">
+      <rect width="88" height="88" rx="16" fill="#3D46F2" />
+      <path d="M30 66H58V58H38V50H58V42H46V34H58V26H70V66H30Z" fill="#2F35C9" />
+    </svg>
+  );
 }
 
-// 시험지(Test) -> "test" 데이터, 학습지(Study) -> "assignment" 데이터.
-// (데이터에는 별도의 "study" 타입이 없어 학습지를 assignment 로 매핑한다.)
-const SECTIONS: SectionConfig[] = [
-  {
-    key: "test",
-    heading: "시험지",
-    types: ["test"],
-    color: "#DC2626",
-    chipBg: "bg-red-50",
-    chipText: "text-[#DC2626]",
-  },
-  {
-    key: "study",
-    heading: "학습지",
-    types: ["assignment"],
-    color: "#3B82F6",
-    chipBg: "bg-blue-50",
-    chipText: "text-[#3B82F6]",
-  },
-];
-
-const CalendarIcon = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-4 w-4"
-    aria-hidden="true"
-  >
-    <rect x={3} y={4} width={18} height={18} rx={2} />
-    <path d="M16 2v4M8 2v4M3 10h18" />
-  </svg>
-);
-
-function ProblemCard({
-  set,
-  color,
-  chipBg,
-  chipText,
-  onClick,
-}: {
-  set: ProblemSet;
-  color: string;
-  chipBg: string;
-  chipText: string;
-  onClick: () => void;
-}) {
+/** Lightning bolt tile icon for exam (시험지) cards. */
+function LightningIcon() {
   return (
-    <Card onClick={onClick} className="flex flex-col gap-2">
-      <div className="flex items-start justify-between gap-3">
-        <span
-          className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold ${chipBg} ${chipText}`}
-        >
-          {set.subject}
-        </span>
-        <span
-          className="text-xs font-semibold"
-          style={{ color }}
-          aria-hidden="true"
-        >
-          {set.problems.length}문항
-        </span>
+    <svg viewBox="0 0 88 88" className="h-full w-full" aria-hidden="true">
+      <rect width="88" height="88" rx="16" fill="#EE5D43" />
+      <path d="M50 20 26 50h14l-4 20 26-32H48l4-18Z" fill="#C33F2E" />
+    </svg>
+  );
+}
+
+function WorksheetCard({ set, onClick }: { set: ProblemSet; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full gap-4 rounded-2xl border border-gray-100 bg-white p-4 text-left shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3D46F2]"
+    >
+      <div className="h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl">
+        <StairsIcon />
       </div>
-      <h3 className="text-base font-bold text-gray-900">{set.title}</h3>
-      <div className="flex items-center gap-1 text-xs text-gray-400">
-        {CalendarIcon}
-        <span>{set.date}</span>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <h2 className="line-clamp-2 text-[14px] font-bold text-gray-900">
+          {set.title}
+        </h2>
+
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-[11px] text-gray-400">권고 기간</span>
+          <span className="text-[12px] font-bold text-gray-900">{set.period}</span>
+        </div>
+
+        <div className="mt-2 flex items-center gap-3">
+          <div className="h-1 flex-1 rounded bg-gray-100">
+            <div className="h-1 w-[30%] rounded bg-gray-300" />
+          </div>
+          <span className="shrink-0 text-[12px]">
+            <span className="font-bold text-gray-900">풀이 전</span>
+            <span className="text-gray-400"> / {set.problemCount}문제</span>
+          </span>
+        </div>
+
+        <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-2">
+          <span className="text-[12px] font-bold text-gray-900">{set.teacher}</span>
+          <span className="flex gap-3 text-[11px] text-gray-400">
+            {set.tags.map((tag) => (
+              <span key={tag}>{tag}</span>
+            ))}
+          </span>
+        </div>
       </div>
-    </Card>
+    </button>
+  );
+}
+
+function ExamCard({ set }: { set: ProblemSet }) {
+  return (
+    <div className="flex w-full gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+      <div className="h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl">
+        <LightningIcon />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <h2 className="line-clamp-2 text-[14px] font-bold text-gray-900">
+          {set.title}
+        </h2>
+
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-[11px] text-gray-400">시험 시간</span>
+          <span className="text-[12px] font-bold text-[#EE5D43]">
+            {set.examMinutes}분
+          </span>
+        </div>
+
+        <div className="mt-1 flex items-center justify-between">
+          <span className="text-[11px] text-gray-400">문제 수</span>
+          <span className="text-[12px] font-bold text-gray-900">
+            {set.problemCount}문제
+          </span>
+        </div>
+
+        <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-2">
+          <span className="text-[12px] font-bold text-gray-900">{set.teacher}</span>
+          <span className="flex gap-3 text-[11px] text-gray-400">
+            {set.tags.map((tag) => (
+              <span key={tag}>{tag}</span>
+            ))}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
 
 export default function ProblemsPage() {
   const router = useRouter();
 
-  const handleTabChange = useCallback(
-    (tab: NavTab) => {
-      if (tab === "school") {
-        router.push("/dashboard");
-      } else if (tab === "teachers") {
-        router.push("/teachers");
-      }
-      // "problems" tab is the current page; no navigation needed.
-    },
-    [router]
-  );
-
-  const sections = useMemo(
-    () =>
-      SECTIONS.map((section) => ({
-        ...section,
-        items: problemSets.filter((set) => section.types.includes(set.type)),
-      })),
-    []
-  );
+  const worksheets = problemSets.filter((set) => set.kind === "worksheet");
+  const exams = problemSets.filter((set) => set.kind === "exam");
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-gray-50">
-      <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white">
-        <div className="mx-auto flex w-full max-w-3xl items-center px-4 py-4">
-          <h1 className="text-lg font-bold text-gray-900">내문제지</h1>
+    <AppShell>
+      <div className="mx-auto max-w-[660px] py-12">
+        <h1 className="mb-10 text-[26px] font-bold text-gray-900">내 문제지</h1>
+
+        <div className="flex flex-col gap-5">
+          {worksheets.map((set) => (
+            <WorksheetCard
+              key={set.id}
+              set={set}
+              onClick={() => router.push(`/problems/${set.id}`)}
+            />
+          ))}
+          {exams.map((set) => (
+            <ExamCard key={set.id} set={set} />
+          ))}
         </div>
-      </header>
-
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-6 pb-24">
-        {sections.map((section) => (
-          <section key={section.key} className="flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <span
-                className="h-4 w-1.5 rounded-full"
-                style={{ backgroundColor: section.color }}
-                aria-hidden="true"
-              />
-              <h2
-                className="text-base font-bold"
-                style={{ color: section.color }}
-              >
-                {section.heading}
-              </h2>
-              <span className="text-sm font-medium text-gray-400">
-                {section.items.length}
-              </span>
-            </div>
-
-            {section.items.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-6 text-center text-sm text-gray-400">
-                등록된 항목이 없습니다.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {section.items.map((set) => (
-                  <ProblemCard
-                    key={set.id}
-                    set={set}
-                    color={section.color}
-                    chipBg={section.chipBg}
-                    chipText={section.chipText}
-                    onClick={() => router.push(`/problems/${set.id}`)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        ))}
-      </main>
-
-      <Navigation activeTab="problems" onTabChange={handleTabChange} />
-    </div>
+      </div>
+    </AppShell>
   );
 }

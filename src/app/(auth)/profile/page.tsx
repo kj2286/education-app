@@ -1,11 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
-import { Toast, type ToastType } from "@/components/Toast";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import mockSchools from "@/data/mockSchools.json";
 
 interface School {
@@ -17,30 +15,76 @@ interface School {
 
 const SCHOOLS = mockSchools as School[];
 const GRADES = [1, 2, 3];
-const CLASSES = Array.from({ length: 10 }, (_, index) => index + 1);
+const CLASSES = Array.from({ length: 14 }, (_, index) => index + 1);
+const TRACKS = ["인문계열", "자연계열", "예체능계열", "가사실업계열"];
+const DEPTS = ["문과", "이과", "공통"];
 const MAX_SCHOOL_SUGGESTIONS = 8;
+
+function ChevronLeftIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4 text-gray-400"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+function ClearIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4 text-gray-400"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  );
+}
 
 export default function ProfilePage() {
   const router = useRouter();
   const { saveProfile } = useAuth();
+  const { toast } = useToast();
 
-  const [studentName, setStudentName] = useState("");
   const [schoolQuery, setSchoolQuery] = useState("");
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [grade, setGrade] = useState("");
   const [classNumber, setClassNumber] = useState("");
+  const [track, setTrack] = useState("");
+  const [dept, setDept] = useState("");
   const [isSchoolDropdownOpen, setIsSchoolDropdownOpen] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const schoolInputWrapperRef = useRef<HTMLDivElement>(null);
-
-  const showToast = useCallback((message: string, type: ToastType = "info") => {
-    setToast({ message, type });
-  }, []);
-
-  const dismissToast = useCallback(() => {
-    setToast(null);
-  }, []);
 
   const filteredSchools = useMemo(() => {
     const query = schoolQuery.trim();
@@ -78,96 +122,94 @@ export default function ProfilePage() {
     setIsSchoolDropdownOpen(false);
   }, []);
 
-  const isFormValid =
-    studentName.trim().length > 0 &&
-    selectedSchool !== null &&
-    grade !== "" &&
-    classNumber !== "";
+  const handleClearSchool = useCallback(() => {
+    setSelectedSchool(null);
+    setSchoolQuery("");
+  }, []);
 
-  const handleSubmit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
+  const isFormValid = selectedSchool !== null && grade !== "" && classNumber !== "";
 
-      if (!isFormValid || selectedSchool === null) {
-        showToast("모든 항목을 입력해주세요", "error");
-        return;
-      }
+  const handleSubmit = useCallback(() => {
+    if (!isFormValid || selectedSchool === null) {
+      toast({ message: "모든 항목을 입력해주세요" });
+      return;
+    }
 
-      saveProfile({
-        name: studentName.trim(),
-        schoolId: String(selectedSchool.id),
-        schoolName: selectedSchool.name,
-        grade: Number(grade),
-        class: Number(classNumber),
-      });
+    saveProfile({
+      schoolId: String(selectedSchool.id),
+      schoolName: selectedSchool.name,
+      grade: Number(grade),
+      classNo: Number(classNumber),
+      track: track || undefined,
+      dept: dept || undefined,
+    });
 
-      router.push("/dashboard");
-    },
-    [isFormValid, selectedSchool, studentName, grade, classNumber, saveProfile, router, showToast]
-  );
+    router.push("/dashboard");
+  }, [isFormValid, selectedSchool, grade, classNumber, track, dept, saveProfile, router, toast]);
 
   const handleBack = useCallback(() => {
     router.push("/user-type");
   }, [router]);
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 px-6 py-12">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 rounded"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
-          </svg>
-          뒤로
-        </button>
+    <div className="min-h-screen w-full bg-white px-6 py-10">
+      <button
+        type="button"
+        onClick={handleBack}
+        className="inline-flex items-center gap-1 text-[13px] font-medium text-gray-600 focus:outline-none"
+      >
+        <ChevronLeftIcon />
+        뒤로
+      </button>
 
-        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">프로필 설정</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          학교와 학년 정보를 입력하고 시작하세요
-        </p>
+      <div className="mx-auto mt-8 flex w-full max-w-[420px] flex-col">
+        <h1 className="text-[20px] font-bold text-gray-900">프로필을 완성해볼까요?</h1>
 
-        <form className="mt-8 flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+        <div className="mt-8 flex flex-col gap-6">
           <div className="relative" ref={schoolInputWrapperRef}>
-            <label htmlFor="schoolName" className="mb-1 block text-sm font-medium text-gray-700">
-              학교명
+            <label htmlFor="schoolName" className="mb-2 block text-[13px] font-semibold text-gray-900">
+              다니고 있는 학교를 검색해 주세요.
             </label>
-            <Input
-              id="schoolName"
-              type="text"
-              autoComplete="off"
-              placeholder="학교명을 입력하세요"
-              value={schoolQuery}
-              onChange={handleSchoolQueryChange}
-              onFocus={handleSchoolFocus}
-              onBlur={handleSchoolBlur}
-              role="combobox"
-              aria-expanded={isSchoolDropdownOpen && filteredSchools.length > 0}
-              aria-controls="school-suggestions"
-              aria-autocomplete="list"
-            />
+            <div className="relative">
+              <input
+                id="schoolName"
+                type="text"
+                autoComplete="off"
+                placeholder="학교명을 입력하세요"
+                value={schoolQuery}
+                onChange={handleSchoolQueryChange}
+                onFocus={handleSchoolFocus}
+                onBlur={handleSchoolBlur}
+                role="combobox"
+                aria-expanded={isSchoolDropdownOpen && filteredSchools.length > 0}
+                aria-controls="school-suggestions"
+                aria-autocomplete="list"
+                className="h-[52px] w-full rounded-xl border border-gray-200 px-4 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-400 focus:outline-none"
+              />
+              {schoolQuery.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={handleClearSchool}
+                  aria-label="학교 지우기"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none"
+                >
+                  <ClearIcon />
+                </button>
+              ) : null}
+            </div>
 
             {isSchoolDropdownOpen && filteredSchools.length > 0 ? (
               <ul
                 id="school-suggestions"
                 role="listbox"
-                className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
               >
                 {filteredSchools.map((school) => (
                   <li key={school.id} role="option" aria-selected={selectedSchool?.id === school.id}>
                     <button
                       type="button"
                       onClick={() => handleSelectSchool(school)}
-                      className="flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left text-sm hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                      className="flex w-full flex-col items-start gap-0.5 px-4 py-2 text-left text-sm hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
                     >
                       <span className="font-medium text-gray-900">{school.name}</span>
                       <span className="text-xs text-gray-400">{school.address}</span>
@@ -180,25 +222,27 @@ export default function ProfilePage() {
             {isSchoolDropdownOpen &&
             schoolQuery.trim().length > 0 &&
             filteredSchools.length === 0 ? (
-              <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-400 shadow-lg">
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-400 shadow-lg">
                 일치하는 학교가 없습니다
               </div>
             ) : null}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="grade" className="mb-1 block text-sm font-medium text-gray-700">
-                학년
-              </label>
+          <div>
+            <label htmlFor="grade" className="mb-2 block text-[13px] font-semibold text-gray-900">
+              몇 학년인가요?
+            </label>
+            <div className="relative">
               <select
                 id="grade"
                 value={grade}
                 onChange={(event) => setGrade(event.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40"
+                className={`h-[52px] w-full appearance-none rounded-xl border border-gray-200 px-4 pr-10 text-sm focus:border-gray-400 focus:outline-none ${
+                  grade === "" ? "text-gray-400" : "text-gray-900"
+                }`}
               >
                 <option value="" disabled>
-                  선택
+                  학년 선택
                 </option>
                 {GRADES.map((value) => (
                   <option key={value} value={value}>
@@ -206,20 +250,27 @@ export default function ProfilePage() {
                   </option>
                 ))}
               </select>
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                <ChevronDownIcon />
+              </span>
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="classNumber" className="mb-1 block text-sm font-medium text-gray-700">
-                반
-              </label>
+          <div>
+            <label htmlFor="classNumber" className="mb-2 block text-[13px] font-semibold text-gray-900">
+              몇 반인가요?
+            </label>
+            <div className="relative">
               <select
                 id="classNumber"
                 value={classNumber}
                 onChange={(event) => setClassNumber(event.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40"
+                className={`h-[52px] w-full appearance-none rounded-xl border border-gray-200 px-4 pr-10 text-sm focus:border-gray-400 focus:outline-none ${
+                  classNumber === "" ? "text-gray-400" : "text-gray-900"
+                }`}
               >
                 <option value="" disabled>
-                  선택
+                  반 선택
                 </option>
                 {CLASSES.map((value) => (
                   <option key={value} value={value}>
@@ -227,32 +278,75 @@ export default function ProfilePage() {
                   </option>
                 ))}
               </select>
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                <ChevronDownIcon />
+              </span>
             </div>
           </div>
 
           <div>
-            <label htmlFor="studentName" className="mb-1 block text-sm font-medium text-gray-700">
-              이름
+            <label htmlFor="track" className="mb-2 block text-[13px] font-semibold text-gray-900">
+              어떤 계열인가요?
             </label>
-            <Input
-              id="studentName"
-              type="text"
-              autoComplete="name"
-              placeholder="이름을 입력하세요"
-              value={studentName}
-              onChange={(event) => setStudentName(event.target.value)}
-            />
+            <div className="relative">
+              <select
+                id="track"
+                value={track}
+                onChange={(event) => setTrack(event.target.value)}
+                className={`h-[52px] w-full appearance-none rounded-xl border border-gray-200 px-4 pr-10 text-sm focus:border-gray-400 focus:outline-none ${
+                  track === "" ? "text-gray-400" : "text-gray-900"
+                }`}
+              >
+                <option value="" disabled>
+                  계열 선택
+                </option>
+                {TRACKS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                <ChevronDownIcon />
+              </span>
+            </div>
           </div>
 
-          <Button type="submit" variant="primary" className="mt-2 w-full">
-            시작하기
-          </Button>
-        </form>
-      </div>
+          <div>
+            <label htmlFor="dept" className="mb-2 block text-[13px] font-semibold text-gray-900">
+              어떤 과인가요?
+            </label>
+            <div className="relative">
+              <select
+                id="dept"
+                value={dept}
+                onChange={(event) => setDept(event.target.value)}
+                className={`h-[52px] w-full appearance-none rounded-xl border border-gray-200 px-4 pr-10 text-sm focus:border-gray-400 focus:outline-none ${
+                  dept === "" ? "text-gray-400" : "text-gray-900"
+                }`}
+              >
+                <option value="">과 선택</option>
+                {DEPTS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                <ChevronDownIcon />
+              </span>
+            </div>
+          </div>
 
-      {toast ? (
-        <Toast message={toast.message} type={toast.type} duration={3000} onDismiss={dismissToast} />
-      ) : null}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="mt-2 h-[56px] w-full rounded-lg bg-[#26282B] text-base font-semibold text-white focus:outline-none"
+          >
+            완료
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

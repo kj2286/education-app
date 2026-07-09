@@ -10,16 +10,20 @@ import {
 } from "react";
 import { getAuthUser, setAuthUser, clearAuthUser } from "@/lib/storage";
 
+export interface AuthProfile {
+  name?: string;
+  schoolId: string;
+  schoolName: string;
+  grade: number;
+  classNo: number;
+  track?: string;
+  dept?: string;
+}
+
 export interface AuthUser {
   loggedIn: boolean;
   userType?: "teacher" | "student" | "parent";
-  profile?: {
-    name: string;
-    schoolId: string;
-    schoolName: string;
-    grade: number;
-    class: number;
-  };
+  profile?: AuthProfile;
 }
 
 export interface AuthContextType {
@@ -27,7 +31,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => void;
   logout: () => void;
   selectUserType: (type: "teacher" | "student" | "parent") => void;
-  saveProfile: (profile: Omit<AuthUser["profile"], never>) => void;
+  saveProfile: (profile: AuthProfile) => void;
 }
 
 const DEFAULT_USER: AuthUser = {
@@ -121,8 +125,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: "SELECT_USER_TYPE", payload: type });
   }, []);
 
-  const saveProfile = useCallback((profile: Omit<AuthUser["profile"], never>) => {
-    dispatch({ type: "SAVE_PROFILE", payload: profile as NonNullable<AuthUser["profile"]> });
+  const saveProfile = useCallback((profile: AuthProfile) => {
+    dispatch({ type: "SAVE_PROFILE", payload: profile });
   }, []);
 
   const value: AuthContextType = {

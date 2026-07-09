@@ -1,125 +1,109 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/Button";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
 type UserType = "teacher" | "student" | "parent";
+
+/** Small inline mark: identical to the logo used in AppShell. */
+function LogoMark() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      className="h-5 w-5 shrink-0"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="userTypeLogoGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#1E9EB8" />
+          <stop offset="100%" stopColor="#2C4A8A" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M12 5.5C10.2 4 7.5 3.2 4 3.2v14c3.5 0 6.2.8 8 2.3 1.8-1.5 4.5-2.3 8-2.3v-14c-3.5 0-6.2.8-8 2.3Z"
+        fill="url(#userTypeLogoGradient)"
+      />
+      <path d="M12 5.5v14" stroke="white" strokeWidth={0.75} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** 4-lobed clover blob icon (선생님 / 학부모 disabled states use gray). */
+function CloverIcon({ fill }: { fill: string }) {
+  return (
+    <svg viewBox="0 0 40 40" className="h-9 w-9" aria-hidden="true">
+      <circle cx="20" cy="12" r="11" fill={fill} />
+      <circle cx="12" cy="20" r="11" fill={fill} />
+      <circle cx="28" cy="20" r="11" fill={fill} />
+      <circle cx="20" cy="28" r="11" fill={fill} />
+    </svg>
+  );
+}
+
+/** 6-lobed flower/cloud blob icon for 학생 (selected = blue, unselected = gray). */
+function SixLobeBlob({ fill }: { fill: string }) {
+  const cx = 20;
+  const cy = 20;
+  const r = 10;
+  const dist = 10;
+  const lobes = Array.from({ length: 6 }, (_, i) => {
+    const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
+    return { x: cx + dist * Math.cos(angle), y: cy + dist * Math.sin(angle) };
+  });
+  return (
+    <svg viewBox="0 0 40 40" className="h-9 w-9" aria-hidden="true">
+      {lobes.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r={r} fill={fill} />
+      ))}
+      <circle cx={cx} cy={cy} r={r} fill={fill} />
+    </svg>
+  );
+}
+
+/** 4-dot grid icon for 학부모 (disabled). */
+function FourCirclesIcon({ fill }: { fill: string }) {
+  return (
+    <svg viewBox="0 0 40 40" className="h-9 w-9" aria-hidden="true">
+      <circle cx="15" cy="15" r="6" fill={fill} />
+      <circle cx="25" cy="15" r="6" fill={fill} />
+      <circle cx="15" cy="25" r="6" fill={fill} />
+      <circle cx="25" cy="25" r="6" fill={fill} />
+    </svg>
+  );
+}
 
 interface UserTypeOption {
   id: UserType;
   label: string;
-  description: string;
   disabled: boolean;
-  icon: ReactNode;
-}
-
-function TeacherIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden="true">
-      <path
-        d="M12 14c3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6 2.69 6 6 6z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M4 21c0-3.87 3.58-7 8-7s8 3.13 8 7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path d="M9 9.5h6M12 9.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function StudentIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden="true">
-      <path
-        d="M12 4 2 8l10 4 10-4-10-4z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6 10.5v4.5c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M22 8v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ParentIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden="true">
-      <path
-        d="M9 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M17 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M3 20c0-3.31 2.69-6 6-6s6 2.69 6 6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M15.5 14.5c2.54.34 4.5 2.46 4.5 5.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
 }
 
 const USER_TYPE_OPTIONS: UserTypeOption[] = [
-  {
-    id: "teacher",
-    label: "선생님",
-    description: "수업과 학생을 관리해요",
-    disabled: true,
-    icon: <TeacherIcon />,
-  },
-  {
-    id: "student",
-    label: "학생",
-    description: "맞춤 학습을 시작해요",
-    disabled: false,
-    icon: <StudentIcon />,
-  },
-  {
-    id: "parent",
-    label: "학부모",
-    description: "자녀의 학습을 확인해요",
-    disabled: true,
-    icon: <ParentIcon />,
-  },
+  { id: "teacher", label: "선생님", disabled: true },
+  { id: "student", label: "학생", disabled: false },
+  { id: "parent", label: "학부모", disabled: true },
 ];
 
 export default function UserTypePage() {
   const router = useRouter();
   const { selectUserType } = useAuth();
+  const { toast } = useToast();
 
   const [selected, setSelected] = useState<UserType | null>(null);
 
-  const handleSelect = useCallback((option: UserTypeOption) => {
-    if (option.disabled) {
-      return;
-    }
-    setSelected(option.id);
-  }, []);
+  const handleSelect = useCallback(
+    (option: UserTypeOption) => {
+      if (option.disabled) {
+        toast({ message: "학생만 선택할 수 있어요" });
+        return;
+      }
+      setSelected(option.id);
+    },
+    [toast]
+  );
 
   const handleNext = useCallback(() => {
     if (selected !== "student") {
@@ -129,91 +113,71 @@ export default function UserTypePage() {
     router.push("/profile");
   }, [selected, selectUserType, router]);
 
-  const handleBack = useCallback(() => {
-    router.push("/login");
-  }, [router]);
-
   return (
-    <div className="flex min-h-screen w-full flex-col items-center bg-gray-50 px-6 py-12 md:py-16">
-      <div className="w-full max-w-3xl">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">
-            어떤 사용자로 시작할까요?
-          </h1>
-          <p className="mt-2 text-sm text-gray-500 md:text-base">
-            역할을 선택하면 그에 맞는 화면으로 안내해 드려요
-          </p>
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-white px-6">
+      <div className="flex flex-col items-center">
+        <div className="flex items-center gap-1.5">
+          <LogoMark />
+          <span className="text-[15px] font-extrabold tracking-tight text-[#112233]">
+            수학비서
+          </span>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <h1 className="mt-8 text-center text-[22px] font-bold leading-snug text-gray-900">
+          안녕하세요.
+          <br />
+          수학비서입니다.
+          <br />
+          사용하는 역할을 선택해 주세요.
+        </h1>
+
+        <div className="mt-10 flex flex-row gap-3">
           {USER_TYPE_OPTIONS.map((option) => {
-            const isSelected = selected === option.id;
+            const isStudent = option.id === "student";
+            const isSelected = isStudent && selected === "student";
 
             return (
-              <div
+              <button
                 key={option.id}
-                role="button"
-                tabIndex={option.disabled ? -1 : 0}
-                aria-disabled={option.disabled}
+                type="button"
                 aria-pressed={isSelected}
+                aria-disabled={option.disabled}
                 onClick={() => handleSelect(option)}
-                onKeyDown={(event) => {
-                  if (option.disabled) {
-                    return;
-                  }
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    handleSelect(option);
-                  }
-                }}
-                className={`flex flex-col items-center gap-3 rounded-xl border-2 bg-white p-6 text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2563EB] ${
-                  option.disabled
-                    ? "cursor-not-allowed opacity-50"
-                    : "cursor-pointer hover:border-[#2563EB]/50"
-                } ${
-                  isSelected
-                    ? "border-[#2563EB] bg-blue-50"
-                    : "border-gray-200"
+                className={`flex h-[170px] w-[163px] flex-col items-center justify-center gap-3 rounded-[28px] transition-colors focus:outline-none ${
+                  option.disabled ? "cursor-not-allowed" : "cursor-pointer"
                 }`}
+                style={{ backgroundColor: isSelected ? "#E9EAFD" : "#F4F4F5" }}
               >
-                <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-full ${
-                    isSelected ? "bg-[#2563EB] text-white" : "bg-gray-100 text-gray-500"
-                  }`}
+                {option.id === "teacher" ? (
+                  <CloverIcon fill="#C9C9CD" />
+                ) : option.id === "student" ? (
+                  <SixLobeBlob fill={isSelected ? "#4954F0" : "#C9C9CD"} />
+                ) : (
+                  <FourCirclesIcon fill="#C9C9CD" />
+                )}
+                <span
+                  className="text-[15px] font-medium"
+                  style={{
+                    color: isSelected ? "#4954F0" : "#9A9AA2",
+                    fontWeight: isSelected ? 600 : 500,
+                  }}
                 >
-                  {option.icon}
-                </div>
-                <div>
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-base font-semibold text-gray-900">
-                      {option.label}
-                    </span>
-                    {option.disabled ? (
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-400">
-                        준비중
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-1 text-xs text-gray-500">{option.description}</p>
-                </div>
-              </div>
+                  {option.label}
+                </span>
+              </button>
             );
           })}
         </div>
 
-        <div className="mt-10 flex items-center justify-between gap-4">
-          <Button type="button" variant="secondary" onClick={handleBack}>
-            이전
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            disabled={selected !== "student"}
-            onClick={handleNext}
-          >
-            다음
-          </Button>
-        </div>
+        <button
+          type="button"
+          disabled={selected !== "student"}
+          onClick={handleNext}
+          className="mt-10 h-[56px] w-[290px] rounded-full text-base font-semibold text-white transition-colors focus:outline-none disabled:cursor-not-allowed"
+          style={{ backgroundColor: selected === "student" ? "#26282B" : "#B9BCC8" }}
+        >
+          다음
+        </button>
       </div>
     </div>
   );
